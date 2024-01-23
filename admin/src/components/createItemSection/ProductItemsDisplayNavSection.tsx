@@ -6,7 +6,7 @@ import {
   setShowAddIncredientsPage,
   setShowAddCreateProductPage,
   setShowAllProductPage,
-} from "../../redux/reducer";
+} from "../../redux/displaySectionReducer";
 
 interface ShowSectionState {
   showCategorySection: Boolean;
