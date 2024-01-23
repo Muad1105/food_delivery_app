@@ -1,9 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
-import showSectionReducer from "./reducer";
+import showSectionReducer from "./displaySectionReducer";
+import showChangesReducer from "./showItemChangesReducer";
 
+console.log('store changes triggered');
 export const store = configureStore({
+  
   reducer: {
     showSection: showSectionReducer,
+    showChanges: showChangesReducer,
   },
 });
 

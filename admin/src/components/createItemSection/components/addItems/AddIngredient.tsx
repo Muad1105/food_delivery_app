@@ -1,16 +1,28 @@
 import Button from "@mui/material/Button";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSnackbar } from "notistack";
+import { useDispatch } from "react-redux";
+import { setShowIngredientAdded } from "../../../../redux/showItemChangesReducer";
 
 const AddIngredient = () => {
   const [ingredientName, setIngredientName] = useState<String>("");
-  const [ingredientAlreadyExists, setIngredientAlreadyExists] = useState(false);
+  const [ingredientCreated, setIngredientCreated] = useState(false);
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    console.log("incredient created");
+
+    ingredientCreated
+      ? dispatch(setShowIngredientAdded(true))
+      : dispatch(setShowIngredientAdded(false));
+  }, [ingredientCreated]);
 
   const { enqueueSnackbar } = useSnackbar();
 
   const handleIngredient = async () => {
-    setIngredientAlreadyExists(false);
+    setIngredientCreated(false);
     if (ingredientName) {
       console.log(ingredientName);
 
@@ -21,18 +33,19 @@ const AddIngredient = () => {
         .then((res) => {
           console.log(res);
           enqueueSnackbar("Ingredient Created", { variant: "success" });
+          setIngredientCreated(true);
         })
         .catch((err) => {
           if (err.response.status === 409) {
-            setIngredientAlreadyExists(true);
+            enqueueSnackbar("Ingredient Already exists", {
+              variant: "error",
+            });
           }
         });
     }
   };
 
   const handleOnchangeIngredient = (ingredent: String) => {
-    setIngredientAlreadyExists(false);
-
     setIngredientName(ingredent);
   };
 
@@ -62,9 +75,6 @@ const AddIngredient = () => {
             Add
           </Button>
         </div>
-        {ingredientAlreadyExists && (
-          <div className="text-red-700">Ingredient Already exists.</div>
-        )}
       </form>
     </div>
   );

@@ -10,6 +10,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import { useSnackbar } from "notistack";
+import { useDispatch, useSelector } from "react-redux";
+import { setShowCategoryDeleted } from "../../../../redux/showItemChangesReducer";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -43,11 +45,45 @@ interface CategoryListState {
 export default function CategoryList() {
   const [categoryData, setcategoryData] = useState<CategoryListState[]>([]);
   const [categoryDeleted, setCategoryDeleted] = useState(false);
-  const [_, setDummyReloadState] = useState("");
 
   useEffect(() => {
     fetchCategoryData();
   }, []);
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    console.log("category delete");
+
+    categoryDeleted
+      ? dispatch(setShowCategoryDeleted(true))
+      : dispatch(setShowCategoryDeleted(false));
+  }, [categoryDeleted]);
+
+  interface BooleanData {
+    showCategoryAdded: Boolean;
+    showCategoryDeleted: Boolean;
+  }
+
+  interface RootState {
+    showChanges: BooleanData;
+  }
+
+  //Redux to refer to changes and reload when add and delete
+
+  const dataDeleted = useSelector(
+    (state: RootState) => state.showChanges.showCategoryDeleted
+  );
+  console.log(dataDeleted);
+
+  const dataAdded = useSelector(
+    (state: RootState) => state.showChanges.showCategoryAdded
+  );
+  console.log(dataAdded);
+
+  useEffect(() => {
+    fetchCategoryData();
+  }, [dataDeleted, dataAdded]);
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -74,9 +110,12 @@ export default function CategoryList() {
   };
 
   const deleteCategory = async (id: String) => {
+    setCategoryDeleted(false);
+
     await axios.delete(`http://localhost:1112/category/${id}`).then((res) => {
       res.status === 200 &&
         enqueueSnackbar("Category Deleted", { variant: "success" });
+      setCategoryDeleted(true);
     });
   };
 

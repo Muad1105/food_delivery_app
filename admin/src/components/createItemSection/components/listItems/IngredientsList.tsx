@@ -10,6 +10,8 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import { useSnackbar } from "notistack";
+import { useDispatch, useSelector } from "react-redux";
+import { setShowIngredientDeleted } from "../../../../redux/showItemChangesReducer";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -38,16 +40,51 @@ interface Ingredient {
 
 interface IngredientsListState {
   IngredientsData: Ingredient[];
+  _id: String;
+  name: String;
 }
 
 export default function IngredientsList() {
   const [IngredientsData, setIngredientsData] = useState<
     IngredientsListState[]
   >([]);
+  const [deleteIngredient, setdeleteIngredient] = useState(false);
 
   useEffect(() => {
     fetchIngredientsData();
   }, []);
+
+  const dispatch = useDispatch();
+
+  //save state to store when deleted
+  useEffect(() => {
+    deleteIngredient
+      ? dispatch(setShowIngredientDeleted(true))
+      : dispatch(setShowIngredientDeleted(false));
+  }, [deleteIngredient]);
+
+  interface BooleanData {
+    showIngredientAdded: false;
+    showIngredientDeleted: true;
+  }
+
+  interface RootState {
+    showChanges: BooleanData;
+  }
+  //get data from store
+  const dataDeleted = useSelector(
+    (state: RootState) => state.showChanges.showIngredientDeleted
+  );
+  console.log(dataDeleted);
+
+  const dataAdded = useSelector(
+    (state: RootState) => state.showChanges.showIngredientAdded
+  );
+  console.log(dataAdded);
+
+  useEffect(() => {
+    fetchIngredientsData();
+  }, [dataDeleted, dataAdded]);
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -56,17 +93,19 @@ export default function IngredientsList() {
       .get("http://localhost:1112/ingredients/allIngredients")
       .then((res) => {
         console.log(res.data);
-
         setIngredientsData(res.data);
       });
   };
 
-  const deleteIngredient = async (id: String) => {
+  const handleDeleteIngredient = async (id: String) => {
+    //To clear if the store value for showDeleteIngredient is true from prev render
+    setdeleteIngredient(false);
     await axios
       .delete(`http://localhost:1112/ingredients/${id}`)
       .then((res) => {
         res.status === 200 &&
           enqueueSnackbar("Ingredient Deleted", { variant: "success" });
+        setdeleteIngredient(true);
       });
   };
 
@@ -92,7 +131,7 @@ export default function IngredientsList() {
               <StyledTableCell align="left">{item.name}</StyledTableCell>
               <HighlightOffIcon
                 style={{ color: "red", cursor: "pointer" }}
-                onClick={() => deleteIngredient(item._id)}
+                onClick={() => handleDeleteIngredient(item._id)}
               />
             </StyledTableRow>
           ))}

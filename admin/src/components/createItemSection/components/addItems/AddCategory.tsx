@@ -1,17 +1,26 @@
 import Button from "@mui/material/Button";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSnackbar } from "notistack";
+import { useDispatch } from "react-redux";
+import { setShowCategoryAdded } from "../../../../redux/showItemChangesReducer";
 
 const AddCategory = () => {
   const [categoryName, setCategoryName] = useState<String>("");
-  const [categoryAlreadyExists, setCategoryAlreadyExists] = useState(false);
+  const [categoryAdded, setCategoryAdded] = useState(false);
 
-  const [_, setDummyReloadState] = useState("");
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    categoryAdded
+      ? dispatch(setShowCategoryAdded(true))
+      : dispatch(setShowCategoryAdded(false));
+  }, [categoryAdded]);
 
   const { enqueueSnackbar } = useSnackbar();
 
   const handleCategory = async () => {
+    setCategoryAdded(false);
     if (categoryName) {
       console.log(categoryName);
 
@@ -21,20 +30,20 @@ const AddCategory = () => {
         .post("http://localhost:1112/category/create", data)
         .then((res) => {
           console.log(res);
-          setDummyReloadState("")
           enqueueSnackbar("CategoryCreated", { variant: "success" });
+          setCategoryAdded(true);
         })
         .catch((err) => {
           if (err.response.status === 409) {
-            setCategoryAlreadyExists(false);
-            setCategoryAlreadyExists(true);
+            enqueueSnackbar("Category Already Exist.", {
+              variant: "error",
+            });
           }
         });
     }
   };
 
   const handleOnchangeCategory = (category: String) => {
-    setCategoryAlreadyExists(false);
     setCategoryName(category);
   };
 
@@ -65,9 +74,6 @@ const AddCategory = () => {
               Add
             </Button>
           </div>
-          {categoryAlreadyExists && (
-            <div className="text-red-700">Category Already Exists.</div>
-          )}
         </form>
       </div>
     </div>
